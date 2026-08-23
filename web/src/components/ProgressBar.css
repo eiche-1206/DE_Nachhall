@@ -1,0 +1,41 @@
+.pbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.pbar-row__value {
+  font: var(--t-num);
+  color: var(--text-3);
+  min-width: 34px;
+  text-align: right;
+}
+
+.pbar {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--n-300);
+  overflow: hidden;
+}
+
+.pbar__fill {
+  height: 100%;
+  background: var(--acc);
+  border-radius: var(--r-full);
+  transition: width var(--d-base) var(--e-out);
+}
+
+.pbar--indeterminate .pbar__fill {
+  width: 28%;
+  animation: pbar-slide 1.4s var(--e-io) infinite;
+}
+
+@keyframes pbar-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(360%);
+  }
+}

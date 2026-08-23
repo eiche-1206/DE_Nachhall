@@ -1,0 +1,56 @@
+/* 高度恒定：14px 的点击区里放一条 6px 的可视轨道。
+   hover 不改高度 —— 视频下面任何东西一动，跟读的节奏就断了。 */
+.segbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  max-width: var(--w-video);
+  height: 14px;
+  margin: 0 auto;
+}
+
+.segbar__seg {
+  flex-basis: 0;
+  min-width: 3px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.segbar__track {
+  display: block;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--n-200);
+  overflow: hidden;
+  transition: background var(--d-fast) var(--e-out);
+}
+
+/* 已经练过的段落颜色深一档。这里的深浅是**量**不是**态** ——
+   进度条本来就是靠位置读的，跟 StepBar 那条「状态不能只靠颜色」
+   不是同一件事：当前段另有 accent 与内部填充两个通道。 */
+.segbar__seg--passed .segbar__track {
+  background: var(--n-300);
+}
+
+.segbar__seg--current .segbar__track {
+  background: var(--acc-line);
+}
+
+.segbar__fill {
+  display: block;
+  height: 100%;
+  background: var(--acc);
+  border-radius: var(--r-full);
+}
+
+.segbar__seg:hover .segbar__track {
+  background: var(--acc);
+}
+
+.segbar__seg--current:hover .segbar__track {
+  background: var(--acc-line);
+}

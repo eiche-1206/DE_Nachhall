@@ -1,0 +1,25 @@
+.dict {
+  max-width: var(--measure-german);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dict__input {
+  width: 100%;
+  min-height: 140px;
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  resize: vertical;
+}
+
+.dict__input:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px var(--acc-soft);
+}
+
+.dict__input::placeholder {
+  color: var(--text-mute);
+}

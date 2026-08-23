@@ -1,0 +1,174 @@
+/* 全局基线。只用 tokens.css 里的变量，不写字面值。
+   例外只有两处，都不是设计决策：reset 里的 0 / 100% 之类的结构值，
+   以及 ::selection 的透明度。 */
+
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: var(--t-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--acc-text); /* 文字用 --acc-text，不用 --acc（对比度不够） */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--acc-soft);
+  color: var(--text);
+}
+
+/* ---- 排版角色 ------------------------------------------------------ */
+
+.h1 {
+  font: var(--t-h1);
+  letter-spacing: -0.015em;
+}
+
+.h2 {
+  font: var(--t-h2);
+}
+
+.label {
+  font: var(--t-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.meta {
+  font: var(--t-meta);
+  color: var(--text-2);
+}
+
+/* 德语正文有固定行宽 —— 跟读时眼睛要能一行扫完 */
+.german {
+  font: var(--t-german);
+  max-width: var(--measure-german);
+}
+
+.german-lg {
+  font: var(--t-german-lg);
+  max-width: var(--measure-german);
+}
+
+.zh {
+  font: var(--t-zh);
+  color: var(--text-2);
+}
+
+/* ---- 无障碍 -------------------------------------------------------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--s-2);
+  top: calc(var(--s-2) * -8);
+  z-index: 100;
+  padding: var(--s-2) var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--acc-line);
+  border-radius: var(--r-md);
+  transition: top var(--d-fast) var(--e-out);
+}
+
+.skip-link:focus {
+  top: var(--s-2);
+}
+
+/* ---- 页面容器 ------------------------------------------------------ */
+
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.wrap-home {
+  width: 100%;
+  max-width: var(--w-home);
+  margin: 0 auto;
+  padding: 0 var(--s-6);
+}
+
+.wrap-content {
+  width: 100%;
+  max-width: var(--w-content);
+  margin: 0 auto;
+  padding: 0 var(--s-6);
+}

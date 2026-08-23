@@ -1,0 +1,87 @@
+.sset__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--line);
+}
+
+.sset__no {
+  font-family: var(--f-num);
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+.sset__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sset__title {
+  font: var(--t-ui);
+  color: var(--text);
+}
+
+.sset__note {
+  font: var(--t-meta);
+  color: var(--text-3);
+}
+
+/* 静态标签，不是控件 —— 没有 hover、没有 cursor: pointer */
+.sset__fixed {
+  font: var(--t-meta);
+  color: var(--text-3);
+}
+
+.sset__foot {
+  padding: var(--s-3) var(--s-4) var(--s-4);
+  border-top: 1px solid var(--line);
+  background: var(--n-50);
+  font: var(--t-meta);
+  color: var(--text-3);
+}
+
+.sw {
+  flex: none;
+  width: 36px;
+  height: 20px;
+  border-radius: var(--r-full);
+  background: var(--n-300);
+  padding: 2px;
+  transition: background var(--d-fast) var(--e-out);
+}
+
+.sw--on {
+  background: var(--acc);
+}
+
+.sw__knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--r-full);
+  background: var(--n-0);
+  box-shadow: var(--sh-sm);
+  transition: transform var(--d-fast) var(--e-out);
+}
+
+.sw--on .sw__knob {
+  transform: translateX(16px);
+}
+
+/* 组标题。分组不是嵌套 —— 两组在同一层，没有折叠也没有子选项。 */
+.sset__group {
+  padding: var(--s-4) var(--s-4) var(--s-1);
+  border-top: 1px solid var(--line);
+  font: var(--t-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.sset__group + .sset .sset__row:first-child {
+  border-top: 0;
+}

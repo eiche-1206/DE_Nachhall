@@ -1,0 +1,107 @@
+.clist__group + .clist__group {
+  margin-top: var(--s-6);
+}
+
+.clist__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: 0 var(--s-3) var(--s-3);
+}
+
+.clist__stat {
+  font-family: var(--f-num);
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+.clist__group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.clist__row {
+  display: flex;
+  gap: var(--s-2);
+  width: 100%;
+  padding: 9px var(--s-3);
+  border-radius: var(--r-sm);
+  text-align: left;
+  border-left: 3px solid transparent;
+}
+
+.clist__row:hover {
+  background: var(--n-50);
+}
+
+.clist__row--active {
+  background: var(--acc-soft);
+  border-left-color: var(--acc);
+  padding-top: var(--s-3);
+  padding-bottom: var(--s-3);
+}
+
+/* # 号留 accent，文字用主文字色 —— 当前段展开成三四行之后，
+   整段青绿读起来发飘。「当前」这件事底色、左指示条、# 号已经说清楚了。 */
+.clist__row--active .clist__num {
+  color: var(--acc-text);
+  font-weight: 700;
+}
+
+.clist__row--active .clist__text {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.clist__num {
+  flex: 0 0 32px;
+  font-family: var(--f-num);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+
+.clist__text {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* 侧栏：非当前段单行省略 —— 那些是拿来扫的，不是拿来读的。
+   53 段全展开会长到滚不动，反而找不到自己在哪。 */
+.clist--sidebar .clist__text {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 当前段例外：原文完整展开 */
+.clist--sidebar .clist__row--active .clist__text {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.6;
+}
+
+/* 详情页两行：在挑段落，需要看清是哪一段 */
+.clist--detail .clist__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.clist__play {
+  flex: none;
+  width: 12px;
+  opacity: 0;
+  color: var(--acc-text);
+  transition: opacity var(--d-fast) var(--e-out);
+}
+
+.clist__row:hover .clist__play {
+  opacity: 1;
+}

@@ -1,0 +1,36 @@
+/* 同宽由这一个变量控制 —— 两块不可能各自漂移 */
+.cmp {
+  --cmp-w: var(--measure-german);
+  --cmp-pad: var(--s-4);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0 auto;
+}
+
+.cmp__block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* 同宽、同字体、同行高、同内边距 —— 全部机制所在。
+   两个变体只差一个 background，字色完全相同。 */
+.cmp__text {
+  width: 100%;
+  max-width: var(--cmp-w);
+  padding: var(--cmp-pad);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.cmp__text--mine {
+  background: var(--n-100);
+}
+
+.cmp__text--orig {
+  background: var(--n-0);
+}

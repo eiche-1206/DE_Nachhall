@@ -1,0 +1,61 @@
+[project]
+name = "de_nachhall"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "sqlalchemy>=2.0.36",
+  "alembic>=1.13",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "yt-dlp>=2025.1.1",
+  "anthropic>=0.40",
+  "openai>=1.57",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+# faster-whisper 只装在 worker 目标里，api 不需要它（以及它拖来的 CUDA 依赖）
+asr = [
+  "faster-whisper>=1.1.1",
+  "requests",            # huggingface_hub 的隐式依赖，Sprint 0 踩过
+  "huggingface_hub",
+]
+dev = [
+  "pytest>=8",
+  "pytest-asyncio",
+  "ruff>=0.8",
+  "black>=24",
+  "mypy>=1.13",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[[tool.mypy.overrides]]
+module = ["faster_whisper.*", "anthropic.*", "openai.*"]
+ignore_missing_imports = true
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+packages = ["de_nachhall"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

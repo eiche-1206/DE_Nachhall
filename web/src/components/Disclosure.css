@@ -1,0 +1,39 @@
+.disc {
+  max-width: var(--measure-german);
+}
+
+.disc__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  padding: var(--s-2) 0;
+  font: var(--t-ui);
+  color: var(--text-2);
+}
+
+.disc__head--pending {
+  color: var(--text-mute);
+  cursor: default;
+}
+
+.disc__caret {
+  width: 12px;
+  color: var(--text-3);
+}
+
+.disc__pending {
+  font: var(--t-meta);
+  color: var(--text-mute);
+}
+
+.disc__kbd {
+  margin-left: auto;
+  font: var(--t-kbd);
+  color: var(--text-3);
+}
+
+.disc__body {
+  padding: var(--s-2) 0 var(--s-2) var(--s-3);
+  border-left: 2px solid var(--acc-line);
+}

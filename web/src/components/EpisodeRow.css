@@ -1,0 +1,41 @@
+.erow + .erow {
+  border-top: 1px solid var(--n-100);
+}
+
+.erow__btn {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 11px var(--s-4);
+  text-align: left;
+  transition: background var(--d-fast) var(--e-out);
+}
+
+.erow__btn:hover {
+  background: var(--n-50);
+}
+
+.erow__date {
+  flex: 0 0 46px;
+  font-family: var(--f-num);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.erow__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erow__dur {
+  font-family: var(--f-num);
+  font-size: 11.5px;
+  color: var(--text-3);
+}

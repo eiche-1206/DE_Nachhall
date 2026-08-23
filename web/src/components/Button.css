@@ -1,0 +1,77 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  white-space: nowrap;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  transition:
+    filter var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out),
+    background var(--d-fast) var(--e-out);
+}
+
+.btn--md {
+  height: 36px;
+  padding: 0 var(--s-4);
+  font: var(--t-ui);
+}
+
+.btn--sm {
+  height: 28px;
+  padding: 0 10px;
+  font: var(--t-meta);
+  border-radius: var(--r-sm);
+}
+
+.btn--primary {
+  background: var(--acc);
+  color: var(--n-0);
+}
+
+.btn--primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.btn--secondary {
+  background: var(--n-0);
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+.btn--ghost-accent {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+  border-color: var(--acc-line);
+}
+
+.btn--danger {
+  background: var(--n-0);
+  color: var(--err);
+  border-color: var(--err);
+}
+
+.btn--secondary:hover:not(:disabled),
+.btn--ghost-accent:hover:not(:disabled),
+.btn--danger:hover:not(:disabled) {
+  border-color: var(--n-300);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+}
+
+/* 键盘优先原则的可见化 */
+.btn__kbd {
+  font: var(--t-kbd);
+  letter-spacing: 0.02em;
+  opacity: 0.72;
+  padding: 1px 4px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-sm);
+}

@@ -1,0 +1,143 @@
+/* DE_Nachhall Design Tokens · v1.0 · 2026-08-22
+   来源：docs/ui/tokens.css（唯一真源，改那边后重新同步过来）
+   浅色单主题。不定义深色变体——这是产品决策，不是遗漏。 */
+
+:root {
+  /* ---- 中性色（青绿偏色，与主色同源） ---------------------------- */
+  --n-0:    #FFFFFF;
+  --n-50:   #F8FAFA;
+  --n-100:  #F1F4F4;
+  --n-200:  #E3E8E8;
+  --n-300:  #CCD4D4;
+  --n-400:  #9BA5A5;
+  --n-500:  #6F7A7A;
+  --n-600:  #525C5C;
+  --n-700:  #3C4444;
+  --n-800:  #272D2D;
+  --n-900:  #171B1B;
+
+  /* ---- 主色 ------------------------------------------------------- */
+  /* --acc 白底 3.7:1 → 只用于图形元素（达标线 3:1）
+     --acc-text 白底 5.5:1 → 承载文字必须用它（达标线 4.5:1） */
+  --acc:       #0D9488;
+  --acc-text:  #0F766E;
+  --acc-soft:  #E6F4F2;
+  --acc-line:  #9FD3CD;
+  --acc-glow:  rgba(13, 148, 136, .55);
+
+  /* ---- 语义色 ----------------------------------------------------- */
+  /* --err 仅用于系统错误（导入失败、麦克风被拒），
+     绝不用于用户表现——本产品不判对错 */
+  --ok:        #15803D;
+  --warn:      #B45309;
+  --err:       #B91C1C;
+  --err-soft:  #FEF0F0;
+
+  /* ---- 视频叠层专用 ------------------------------------------------ */
+  --ov-bg:     rgba(0, 0, 0, .55);
+  --ov-text:   rgba(255, 255, 255, .92);
+  --ov-rim:    rgba(0, 0, 0, .38);
+
+  /* ---- 语义化角色 -------------------------------------------------- */
+  --bg:        var(--n-50);
+  --surface:   var(--n-0);
+  --line:      var(--n-200);
+  --text:      var(--n-900);
+  --text-2:    var(--n-600);
+  --text-3:    var(--n-500);
+  --text-mute: var(--n-400);
+
+  /* ---- 字体 -------------------------------------------------------- */
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-ui:      "Public Sans", -apple-system, "Segoe UI", Roboto,
+               "PingFang SC", "Noto Sans SC", sans-serif;
+  --f-num:     "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* 按用途命名，不按尺寸命名 */
+  --t-german:     400 20px/1.62 var(--f-ui);
+  --t-german-lg:  400 24px/1.55 var(--f-ui);
+  --t-card-title: 600 20px/1.34 var(--f-ui);   /* HeroCard 标题，另加 -.01em 字距 */
+  --t-zh:         400 15px/1.7  var(--f-ui);
+  --t-body:       400 15px/1.6  var(--f-ui);
+  --t-ui:         500 13.5px/1.5 var(--f-ui);
+  --t-meta:       400 12.5px/1.45 var(--f-ui);
+  --t-label:      600 11px/1.4  var(--f-display);
+  --t-h1:         700 30px/1.15 var(--f-display);
+  --t-h2:         600 19px/1.3  var(--f-display);
+  --t-num:        500 13px/1    var(--f-num);
+  --t-kbd:        500 10px/1    var(--f-num);   /* 按钮内快捷键徽章 */
+
+  --measure-german: 58ch;
+  --ls-label: .09em;
+
+  /* ---- 间距 -------------------------------------------------------- */
+  --s-1:  4px;
+  --s-2:  8px;
+  --s-3:  12px;
+  --s-4:  16px;
+  --s-5:  20px;
+  --s-6:  24px;
+  --s-8:  32px;
+  --s-10: 40px;
+  --s-12: 48px;
+
+  /* ---- 形状 -------------------------------------------------------- */
+  --r-sm:   5px;
+  --r-md:   8px;
+  --r-lg:   12px;
+  --r-full: 999px;
+
+  --sh-sm:  0 1px 2px rgba(23, 27, 27, .06);
+  --sh-md:  0 4px 12px rgba(23, 27, 27, .08);
+  --sh-pop: 0 10px 32px rgba(23, 27, 27, .12);
+
+  /* ---- 布局 -------------------------------------------------------- */
+  --w-home:    1080px;
+  --w-content: 1160px;
+  --w-video:   960px;
+  --w-sidebar: 264px;
+  --h-topbar:  52px;
+  --w-avatar-slot: 40px;   /* 预留，本期不渲染 */
+
+  /* 固定高度，防止状态切换引起布局位移（设计原则 3） */
+  --h-subtitle-area: 88px;
+  --h-status-row:    48px;   /* 两行：阶段格子 + 说明。恒定是硬规则，具体数值不是 */
+  --h-transport:     68px;
+
+  /* ---- 动效 -------------------------------------------------------- */
+  --d-fast: 120ms;
+  --d-base: 180ms;
+  --d-step: 180ms;
+  --d-side: 280ms;
+  --e-out:  ease-out;
+  --e-io:   ease-in-out;
+  --e-side: cubic-bezier(.22, .61, .36, 1);
+}
+
+/* ---- 录音边框：双层描边是硬性要求，且无动画 ----------------------- */
+/* 单层青绿在天空、水面等浅亮画面上会被吃掉，
+   外层 --ov-rim 提供任何帧上都成立的对比参照。
+   不做呼吸/闪烁：录音是持续状态不是事件，动起来只在余光里制造噪音。 */
+.rec-frame {
+  box-shadow:
+    0 0 0 3px var(--acc),
+    0 0 0 5px var(--ov-rim),
+    0 0 18px 2px var(--acc-glow);
+}
+
+/* ---- 焦点 ---------------------------------------------------------- */
+:where(a, button, input, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* ---- 数字对齐 ------------------------------------------------------ */
+.tnum { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}

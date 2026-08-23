@@ -1,0 +1,73 @@
+/* 两行：阶段格子在上，说明在下。高度恒定，见组件注释第 3 条。 */
+.stepbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  height: var(--h-status-row);
+  white-space: nowrap;
+}
+
+.stepbar__list {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}
+
+.stepbar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--line);
+  background: var(--n-50);
+  color: var(--text-3);
+  font: var(--t-meta);
+  transition:
+    background var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out),
+    color var(--d-fast) var(--e-out);
+}
+
+.stepbar__item:hover {
+  border-color: var(--n-300);
+  color: var(--text-2);
+}
+
+/* 当前的：底色、圆点、字重三个通道同时变，不只靠颜色 */
+.stepbar__item--active {
+  border-color: var(--acc-line);
+  background: var(--acc-soft);
+  color: var(--acc-text);
+  font-weight: 600;
+}
+
+.stepbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: currentColor;
+  flex: none;
+}
+
+/* 非当前一律空心点 —— 不依赖颜色的第二通道 */
+.stepbar__dot--hollow {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.stepbar__item--active .stepbar__dot {
+  background: var(--acc);
+}
+
+/* 说明单独一行，不跟格子并排 */
+.stepbar__note {
+  font: var(--t-meta);
+  color: var(--text-3);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

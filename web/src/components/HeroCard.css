@@ -1,0 +1,175 @@
+.hero {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+
+.hero__head {
+  position: relative; /* .hero__open::after 的定位基准 */
+  display: flex;
+  gap: var(--s-5);
+  padding: var(--s-5);
+}
+
+.hero__thumb {
+  position: relative;
+  flex: 0 0 168px;
+  height: 95px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--n-200);
+}
+
+.hero__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero__dur {
+  position: absolute;
+  right: var(--s-1);
+  bottom: var(--s-1);
+  padding: 1px 5px;
+  border-radius: var(--r-sm);
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font: var(--t-num);
+}
+
+.hero__meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.hero__line {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+/* 通道一：等宽字族 —— 与标题的无衬线拉开 */
+.hero__date {
+  font-family: var(--f-num);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+/* 通道二三：20px + 主文字色 */
+/* 覆盖整个头部的点击区。用伪元素而不是把 <header> 变成 <button>：
+   button 的内容模型只允许 phrasing content，塞 <h2> 进去是非法的。 */
+.hero__open {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: color var(--d-fast) var(--e-out);
+}
+
+.hero__open::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.hero__open:hover {
+  color: var(--acc-text);
+}
+
+.hero__open:focus-visible {
+  outline: none;
+}
+
+.hero__open:focus-visible::after {
+  outline: 2px solid var(--acc);
+  outline-offset: -3px;
+}
+
+.hero__title {
+  font: var(--t-card-title);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hero__pending,
+.hero__chapters {
+  border-top: 1px solid var(--line);
+}
+
+.hero__pending {
+  padding: var(--s-4) var(--s-5);
+  font: var(--t-meta);
+  color: var(--text-3);
+}
+
+.hero__chapter {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: 9px var(--s-5);
+  text-align: left;
+  border-bottom: 1px solid var(--n-100);
+}
+
+.hero__num {
+  flex: 0 0 24px;
+  font-family: var(--f-num);
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+.hero__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hero__time {
+  font-family: var(--f-num);
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+.hero__play {
+  width: 12px;
+  opacity: 0;
+  color: var(--acc-text);
+  transition: opacity var(--d-fast) var(--e-out);
+}
+
+.hero__chapter:hover {
+  background: var(--acc-soft);
+}
+
+.hero__chapter:hover .hero__name,
+.hero__chapter:hover .hero__num {
+  color: var(--acc-text);
+}
+
+.hero__chapter:hover .hero__play {
+  opacity: 1;
+}
+
+/* 贴在标题栏右下角。z-index 把它抬到 .hero__open::after 之上，
+   否则整块点击区会把这个按钮盖掉。 */
+.hero__start {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  margin-left: auto;
+  align-self: flex-end;
+}

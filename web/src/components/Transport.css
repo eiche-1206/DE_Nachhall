@@ -1,0 +1,9 @@
+.transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  /* 固定高度：按钮从 3 个变 5 个也不能让上面的视频往上跳 */
+  height: var(--h-transport);
+}

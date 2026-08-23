@@ -1,0 +1,87 @@
+# DE_Nachhall · 本机开发编排
+#
+# 三条与常规不同的地方，都有硬理由：
+#   1. 无 db 服务 —— MVP 用 SQLite（文件），见 docs/SPEC.md §1.1
+#   2. api 与 worker 都用 network_mode: host —— 宿主代理只监听
+#      127.0.0.1:7897，容器内的 127.0.0.1 是它自己的 loopback，够不着，
+#      而代理没开放到 0.0.0.0，host-gateway 那条路也走不通（SPEC §11.3 B1）。
+#      api 也需要出网：提交素材时它同步 probe。host 模式下 ports: 不生效，
+#      所以 uvicorn 直接听 8001，8000 留给 web
+#   3. 媒体文件挂在 ./data/media，不额外挂 ./media —— 两者都映射到
+#      /data/media 时后者会把前者盖住，MEDIA_ROOT 指到哪一份取决于
+#      挂载顺序。踩过一次
+
+name: de_nachhall
+
+services:
+  api:
+    build:
+      context: ./server
+      target: api
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite+pysqlite:////data/de_nachhall.db
+      MEDIA_ROOT: /data/media
+      # api 也要出网：提交素材时它会同步 probe（SPEC §5.3 probe-first）
+      HTTP_PROXY: ${HOST_PROXY:-}
+      HTTPS_PROXY: ${HOST_PROXY:-}
+      NO_PROXY: localhost,127.0.0.1
+    # 和 worker 同理（见文件头注释 2）：代理只监听宿主的 127.0.0.1，
+    # bridge 网络的容器够不着。host 模式下 ports: 不生效，
+    # 所以直接让 uvicorn 听 8001 —— 8000 留给 web。
+    network_mode: host
+    command:
+      - uvicorn
+      - de_nachhall.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8001"
+      - --reload
+      - --reload-dir
+      - /app/src
+    volumes:
+      - ./server/src:/app/src        # 热重载
+      - ./data:/data                 # 库文件与 media/ 都在这下面
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./server
+      target: worker
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite+pysqlite:////data/de_nachhall.db
+      MEDIA_ROOT: /data/media
+      # 宿主代理：worker 要抓 YouTube/ZDF，必须走它
+      HTTP_PROXY: ${HOST_PROXY:-http://127.0.0.1:7897}
+      HTTPS_PROXY: ${HOST_PROXY:-http://127.0.0.1:7897}
+      NO_PROXY: localhost,127.0.0.1
+    network_mode: host               # 见文件头注释
+    volumes:
+      - ./server/src:/app/src
+      - ./data:/data
+      - ./models:/models             # faster-whisper 模型缓存，避免每次重下 1.5GB
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  web:
+    build: ./web
+    # 不用 env_file —— 前端容器不该拿到 ANTHROPIC_API_KEY 之类的密钥
+    environment:
+      VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8001}
+    ports:
+      # 容器内 vite 仍监听 5173，宿主暴露成 8000
+      - "8000:5173"
+    volumes:
+      - ./web/src:/app/src
+      - ./web/index.html:/app/index.html
+    depends_on:
+      - api
+    restart: unless-stopped

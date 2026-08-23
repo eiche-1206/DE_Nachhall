@@ -1,0 +1,35 @@
+# 环境与密钥
+.env
+
+# 数据与媒体（体积大，不进仓库）
+/data/
+/models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/          # pip install -e 的构建产物，容器里生成时归 root
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 仓库里遗留的杂项
+bashrc
+
+# 工具的一次性样本（几十 MB，不进仓库；tools/*.py 与 *.html 要进）
+tools/*.mp4
+tools/*.mp4.bak
+tools/*.vtt

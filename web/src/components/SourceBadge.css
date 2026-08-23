@@ -1,0 +1,26 @@
+/* 12px 与 IngestStrip 的状态文字同字号 —— 同一行里 11.5 / 12 这种
+   半像素级的差，读起来就是「没对齐」。列表语境内次级文字统一 12px。 */
+.sbadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 2px 7px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.sbadge--official {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+  border-color: var(--acc-line);
+}
+
+.sbadge--user {
+  background: var(--n-50);
+  color: var(--text-2);
+  border-color: var(--line);
+}

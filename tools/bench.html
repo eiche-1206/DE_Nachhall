@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>V2b · seek 与暂停精度实测 v3</title>
+<style>
+  :root{--acc:#0D9488;--acc2:#0F766E;--n900:#171B1B;--n600:#525C5C;--n500:#6F7A7A;
+        --n200:#E3E8E8;--n100:#F1F4F4;--ok:#15803D;--bad:#B91C1C}
+  body{font:14px/1.6 ui-monospace,Menlo,Consolas,monospace;margin:24px;max-width:1060px;color:var(--n900)}
+  h1{font:600 20px/1.3 system-ui;margin:0 0 2px}
+  .ver{font:11px ui-monospace;color:var(--n500);margin:0 0 18px}
+  video{width:460px;background:var(--n900);border-radius:8px;display:block}
+  button,select{font:500 13px system-ui;padding:8px 13px;border:1px solid var(--n200);
+    background:#fff;border-radius:7px;cursor:pointer}
+  button.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .row{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+  .ctl{display:flex;flex-direction:column;gap:10px}
+  #log{margin-top:14px;background:var(--n100);border-radius:8px;padding:10px 12px;
+    font:11.5px/1.55 ui-monospace;max-height:190px;overflow:auto;white-space:pre-wrap;
+    color:var(--n600);min-width:420px;flex:1}
+  table{border-collapse:collapse;width:100%;margin-top:16px;font-size:12.5px}
+  th,td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--n100)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--n500);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+  .ok{color:var(--ok);font-weight:600}
+  .bad{color:var(--bad);font-weight:600}
+  #verdict{margin-top:16px;padding:14px 16px;border-radius:8px;background:var(--n100);
+    font:13px/1.65 ui-monospace;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>V2b · seek 与自动暂停精度实测</h1>
+<p class="ver">v3 · 若此处不是 v3 说明仍是缓存页 · 验证 UI-SPEC 的 200 ms 指标</p>
+
+<div class="row">
+  <video id="v" src="./sample.mp4?v=3" preload="auto" muted playsinline controls></video>
+  <div class="ctl">
+    <div>
+      <button id="run" class="pri">▶ 开始实测</button>
+      <select id="rounds">
+        <option value="12" selected>12 轮（约 90 秒）</option>
+        <option value="6">6 轮（约 45 秒）</option>
+        <option value="20">20 轮（约 2.5 分钟）</option>
+      </select>
+    </div>
+    <div>
+      <button id="probe">① 先自检环境</button>
+      <button id="copy">复制结果</button>
+    </div>
+    <div id="status" style="color:var(--n500)">正在加载视频…</div>
+  </div>
+  <div id="log">等待操作。\n</div>
+</div>
+
+<table id="t">
+  <thead><tr>
+    <th>#</th><th>目标 start</th><th>seek 误差</th><th>seek 耗时</th>
+    <th>目标 end</th><th>rVFC 暂停误差</th><th>timeupdate 暂停误差</th>
+  </tr></thead><tbody></tbody>
+</table>
+
+<div id="verdict"></div>
+
+<script>
+const v = document.getElementById('v');
+const tbody = document.querySelector('#t tbody');
+const statusEl = document.getElementById('status');
+const verdict = document.getElementById('verdict');
+const logEl = document.getElementById('log');
+const hasRVFC = 'requestVideoFrameCallback' in HTMLVideoElement.prototype;
+const rows = [];
+let t0 = performance.now();
+
+function log(msg) {
+  const dt = ((performance.now() - t0) / 1000).toFixed(1).padStart(6);
+  logEl.textContent += `[${dt}s] ${msg}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+const fmt = n => (n * 1000).toFixed(1);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function withTimeout(p, ms, what) {
+  return Promise.race([p, new Promise((_, rej) =>
+    setTimeout(() => rej(new Error(`${what} 超时（${ms}ms 无响应）`)), ms))]);
+}
+
+function seekTo(t) {
+  return withTimeout(new Promise(res => {
+    const s = performance.now();
+    v.addEventListener('seeked', () =>
+      res({ ms: performance.now() - s, landed: v.currentTime }), { once: true });
+    v.currentTime = t;
+  }), 8000, `seek 到 ${t.toFixed(2)}s`);
+}
+
+function playUntilRVFC(end) {
+  return withTimeout(new Promise((res, rej) => {
+    let done = false;
+    const step = (_n, meta) => {
+      if (done) return;
+      if (meta.mediaTime >= end) { done = true; v.pause(); res(meta.mediaTime); return; }
+      v.requestVideoFrameCallback(step);
+    };
+    v.requestVideoFrameCallback(step);
+    v.play().catch(rej);
+  }), 20000, 'rVFC 播放');
+}
+
+function playUntilTimeupdate(end) {
+  return withTimeout(new Promise((res, rej) => {
+    const on = () => {
+      if (v.currentTime >= end) {
+        v.removeEventListener('timeupdate', on); v.pause(); res(v.currentTime);
+      }
+    };
+    v.addEventListener('timeupdate', on);
+    v.play().catch(rej);
+  }), 20000, 'timeupdate 播放');
+}
+
+// ---------- 环境自检 ----------
+async function probe() {
+  t0 = performance.now(); logEl.textContent = '';
+  log(`UA: ${navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0] || navigator.userAgent.slice(0, 60)}`);
+  log(`requestVideoFrameCallback: ${hasRVFC ? '支持' : '不支持'}`);
+  log(`readyState=${v.readyState}  networkState=${v.networkState}  duration=${v.duration}`);
+
+  log('检查服务的 Range 支持…');
+  try {
+    const r = await fetch('./sample.mp4?v=3', { headers: { Range: 'bytes=0-99' } });
+    log(`  HTTP ${r.status}  Content-Range: ${r.headers.get('content-range') || '(无)'}`);
+    if (r.status !== 206) log('  ✗ 不是 206 —— 服务不支持 Range，浏览器无法 seek');
+    else log('  ✓ Range 正常');
+  } catch (e) { log(`  ✗ fetch 失败：${e.message}`); }
+
+  if (!Number.isFinite(v.duration) || v.duration <= 0) {
+    log('✗ 视频未就绪，duration 不可用。等状态栏显示「视频就绪」再试。');
+    return false;
+  }
+  log('测试一次 seek…');
+  try {
+    const s = await seekTo(Math.min(10, v.duration / 2));
+    log(`  ✓ seek 成功，落点 ${s.landed.toFixed(3)}s，耗时 ${s.ms.toFixed(0)}ms`);
+  } catch (e) { log(`  ✗ ${e.message}`); return false; }
+
+  log('测试一次播放…');
+  try {
+    await v.play(); await sleep(300); v.pause();
+    log('  ✓ 播放正常');
+  } catch (e) { log(`  ✗ 播放被拒绝：${e.message}（先手动点一下视频）`); return false; }
+
+  log('✓ 环境自检通过，可以开始实测。');
+  return true;
+}
+
+// ---------- 实测 ----------
+async function run() {
+  const N = Number(document.getElementById('rounds').value);
+  const SEG_MIN = 2.0, SEG_SPAN = 1.0;
+  const dur = v.duration;
+  log(`开始实测：${N} 轮，片段 ${SEG_MIN}–${SEG_MIN + SEG_SPAN}s`);
+
+  for (let i = 0; i < N; i++) {
+    const start = 5 + Math.random() * (dur - 20);
+    const end = start + SEG_MIN + Math.random() * SEG_SPAN;
+    const eta = Math.round((N - i) * ((SEG_MIN + SEG_SPAN / 2) * 2 + 0.5));
+    statusEl.textContent = `第 ${i + 1} / ${N} 轮…  约剩 ${eta} 秒`;
+    log(`轮 ${i + 1}: start=${start.toFixed(2)} end=${end.toFixed(2)}`);
+
+    const s = await seekTo(start);
+    const seekErr = Math.abs(s.landed - start);
+    log(`  seek 落点误差 ${fmt(seekErr)}ms，耗时 ${s.ms.toFixed(0)}ms`);
+
+    let rvfcErr = null;
+    if (hasRVFC) {
+      const at = await playUntilRVFC(end);
+      rvfcErr = Math.abs(at - end);
+      log(`  rVFC 暂停误差 ${fmt(rvfcErr)}ms`);
+    }
+
+    await seekTo(start);
+    const tuAt = await playUntilTimeupdate(end);
+    const tuErr = Math.abs(tuAt - end);
+    log(`  timeupdate 暂停误差 ${fmt(tuErr)}ms`);
+
+    rows.push({ i: i + 1, start, seekErr, seekMs: s.ms, end, rvfcErr, tuErr });
+    const cls = e => (e !== null && e * 1000 < 200) ? 'ok' : 'bad';
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td>${i + 1}</td><td>${start.toFixed(2)}s</td>
+      <td class="${cls(seekErr)}">${fmt(seekErr)}</td><td>${s.ms.toFixed(0)}</td>
+      <td>${end.toFixed(2)}s</td>
+      <td class="${cls(rvfcErr)}">${rvfcErr === null ? '不支持' : fmt(rvfcErr)}</td>
+      <td class="${cls(tuErr)}">${fmt(tuErr)}</td></tr>`);
+    await sleep(50);
+  }
+  statusEl.textContent = '完成';
+  log('实测结束。');
+}
+
+function stats(xs) {
+  const a = xs.filter(x => x !== null).sort((p, q) => p - q);
+  if (!a.length) return null;
+  const pct = p => a[Math.min(a.length - 1, Math.floor(a.length * p))];
+  return { med: pct(.5), p95: pct(.95), max: a[a.length - 1] };
+}
+
+function report() {
+  const seek = stats(rows.map(r => r.seekErr));
+  const rvfc = stats(rows.map(r => r.rvfcErr));
+  const tu = stats(rows.map(r => r.tuErr));
+  const line = (n, s) => s
+    ? `${n.padEnd(22)} 中位 ${fmt(s.med).padStart(7)} ms   P95 ${fmt(s.p95).padStart(7)} ms   最大 ${fmt(s.max).padStart(7)} ms`
+    : `${n.padEnd(22)} 不支持`;
+  const pass = rvfc && rvfc.p95 * 1000 < 200;
+  verdict.textContent =
+`浏览器: ${navigator.userAgent.match(/Chrome\/[\d.]+/)?.[0] || navigator.userAgent}
+requestVideoFrameCallback: ${hasRVFC ? '支持' : '不支持'}
+样本数: ${rows.length}
+
+${line('seek 落点误差', seek)}
+${line('rVFC 暂停误差', rvfc)}
+${line('timeupdate 暂停误差', tu)}
+
+结论: ${pass ? '✅ rVFC 的 P95 < 200 ms，UI-SPEC 指标可达成'
+             : '❌ rVFC 的 P95 ≥ 200 ms，需修订 UI-SPEC 指标'}` +
+    (tu && rvfc ? `\n\ntimeupdate 比 rVFC 差 ${(tu.p95 / rvfc.p95).toFixed(1)} 倍 —— 这就是不能只靠 timeupdate 的原因。` : '');
+}
+
+async function safeRun() {
+  const btn = document.getElementById('run');
+  btn.disabled = true; tbody.innerHTML = ''; rows.length = 0;
+  verdict.textContent = ''; logEl.textContent = ''; t0 = performance.now();
+  try {
+    if (!(await probe())) throw new Error('环境自检未通过');
+    await run();
+    report();
+  } catch (e) {
+    log(`✗ 中断：${e.message}`);
+    verdict.textContent = `实测中断：${e.message}\n已完成 ${rows.length} 轮。\n\n把上面的日志贴回给 Claude。`;
+    if (rows.length >= 3) report();
+  } finally {
+    btn.disabled = false;
+    statusEl.textContent = '';
+  }
+}
+
+document.getElementById('run').onclick = safeRun;
+document.getElementById('probe').onclick = () => { probe(); };
+document.getElementById('copy').onclick = async () => {
+  const btn = document.getElementById('copy');
+  const txt = (verdict.textContent.trim() || logEl.textContent.trim());
+  if (!txt) { btn.textContent = '还没有内容'; setTimeout(() => btn.textContent = '复制结果', 1500); return; }
+  try { await navigator.clipboard.writeText(txt); btn.textContent = '✓ 已复制'; }
+  catch {
+    const r = document.createRange(); r.selectNodeContents(verdict.textContent.trim() ? verdict : logEl);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    btn.textContent = '已选中，按 Ctrl+C';
+  }
+  setTimeout(() => btn.textContent = '复制结果', 1800);
+};
+
+v.addEventListener('error', () => {
+  statusEl.textContent = '视频加载失败';
+  log(`✗ 视频加载失败 code=${v.error?.code} ${v.error?.message || ''}`);
+});
+v.addEventListener('loadedmetadata', () => {
+  statusEl.textContent = `视频就绪 ${v.duration.toFixed(1)}s · rVFC ${hasRVFC ? '支持' : '不支持'}`;
+  log(`视频就绪，时长 ${v.duration.toFixed(1)}s`);
+});
+</script>
+</body>
+</html>

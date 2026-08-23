@@ -1,0 +1,33 @@
+.dlg__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ov-rim);
+  padding: var(--s-6);
+}
+
+.dlg {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-pop);
+  padding: var(--s-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.dlg__body {
+  font: var(--t-body);
+  color: var(--text-2);
+}
+
+.dlg__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+}

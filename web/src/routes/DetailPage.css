@@ -1,0 +1,38 @@
+.detail {
+  flex: 1;
+  padding-top: var(--s-6);
+  padding-bottom: var(--s-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+}
+
+.detail__error {
+  padding: var(--s-10) 0;
+  color: var(--text-3);
+  font: var(--t-body);
+}
+
+.detail__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.detail__date {
+  font-family: var(--f-num);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.detail__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+/* 德语原文行宽不超过 58ch —— 跟读时眼睛要能一行扫完 */
+.detail .clist__text {
+  max-width: var(--measure-german);
+}

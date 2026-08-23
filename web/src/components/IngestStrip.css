@@ -1,0 +1,54 @@
+.istrip {
+  display: flex;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.istrip--failed {
+  background: var(--err-soft);
+  border-color: var(--err);
+}
+
+.istrip__icon {
+  flex: none;
+  color: var(--text-3);
+}
+
+.istrip--failed .istrip__icon {
+  color: var(--err);
+}
+
+.istrip__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.istrip__title {
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 12px：与 SourceBadge 同字号，列表语境内次级文字统一 */
+.istrip__note {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.istrip--failed .istrip__note {
+  color: var(--err);
+}
+
+.istrip__actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: var(--s-1);
+}

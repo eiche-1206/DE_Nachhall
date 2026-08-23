@@ -1,0 +1,30 @@
+/* .rec-frame 的 box-shadow 定义在 tokens.css —— 双层描边是设计契约的一部分，
+   跟着 token 走，不在组件里各写一份。这里只管定位。 */
+.recframe__overlay {
+  position: absolute;
+  inset: 3px;
+  border-radius: var(--r-sm);
+  pointer-events: none;
+}
+
+.recframe__badge {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--r-full);
+  background: var(--ov-bg);
+  color: var(--ov-text);
+  font-family: var(--f-num);
+  font-size: 13px;
+}
+
+.recframe__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--r-full);
+  background: var(--acc);
+}

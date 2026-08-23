@@ -1,0 +1,198 @@
+/* 「预留位」布局：左右**各留一列**，宽度恒定。
+   只在右边留的话视频会被挤得偏左；镜像之后视频落在页面正中，
+   且开合侧栏时宽度和位置一动不动 —— UI-SPEC 设计原则 3 要的就是这个。
+   代价是可用宽度少两列（1440px 窗口下视频约 912px，比 960 上限窄一点）。
+   跟顶栏右端那个 40px 头像位是同一种处理：位置先占住。 */
+.echo__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--w-sidebar) minmax(0, 1fr) var(--w-sidebar);
+}
+
+/* 左侧镜像列。纯留白，不画边框也不上底色。 */
+.echo__gutter {
+  border: 0;
+  background: none;
+}
+
+.echo__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-5) var(--s-6) var(--s-12);
+  /* 听写与对照溢出时靠页面滚动，视频不缩小 */
+  overflow-y: auto;
+}
+
+/* 三个固定高度：内容多寡不影响布局，视频永远在同一个位置 */
+.echo__subs {
+  height: var(--h-subtitle-area);
+  width: 100%;
+  max-width: var(--w-video);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+}
+
+.echo__status {
+  height: var(--h-status-row);
+  display: flex;
+  align-items: center;
+}
+
+.echo__side {
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: side-in var(--d-side) var(--e-side);
+}
+
+@keyframes side-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* 收起时的空列：纯留白，没有边框也没有底色 —— 画一条竖线在什么都没有的
+   地方，看起来像出了错。右边缘那个三角才是入口。 */
+.echo__side--empty {
+  background: none;
+  border-left: 0;
+  animation: none;
+}
+
+.echo__side-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.echo__side-head span {
+  font: var(--t-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.echo__side-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--s-3);
+}
+
+.echo__side-foot {
+  flex: none;
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--line);
+  background: var(--n-50);
+  font: var(--t-meta);
+  color: var(--text-3);
+}
+
+/* ── 三角把手 ────────────────────────────────────────────────
+   用 CSS 边框画，不用 ◂ ▸ 字符 —— 字符要看字体里有没有这个字形，
+   回落到 Noto Sans SC 时大小和基线都会跳。 */
+.echo__tri {
+  flex: none;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px 0 5px 6px;
+  border-color: transparent transparent transparent currentColor;
+  transition: transform var(--d-base) var(--e-out);
+}
+
+.echo__tri--out {
+  transform: rotate(180deg); /* 朝左：把侧栏拉出来 */
+}
+
+.echo__side-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r-sm);
+  color: var(--text-3);
+  transition:
+    color var(--d-fast) var(--e-out),
+    background var(--d-fast) var(--e-out);
+}
+
+.echo__side-close:hover {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+}
+
+/* 收起时贴在右边缘的把手。只有三角，没有文字标签。 */
+.echo__handle {
+  position: absolute;
+  right: 0;
+  top: var(--s-6);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 54px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  border-radius: var(--r-md) 0 0 var(--r-md);
+  background: var(--surface);
+  color: var(--text-3);
+  box-shadow: var(--sh-sm);
+  transition:
+    color var(--d-fast) var(--e-out),
+    background var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out);
+}
+
+.echo__handle:hover {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+  border-color: var(--acc-line);
+}
+
+/* 窄屏放不下两列 264px，退回覆盖式抽屉 */
+@media (max-width: 1100px) {
+  .echo__body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .echo__gutter {
+    display: none;
+  }
+
+  .echo__side {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: var(--w-sidebar);
+    box-shadow: var(--sh-pop);
+    z-index: 5;
+  }
+}
+
+.echo__error {
+  padding: var(--s-10) 0;
+  color: var(--text-3);
+  font: var(--t-body);
+}

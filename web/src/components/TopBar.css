@@ -1,0 +1,83 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  height: var(--h-topbar);
+  padding: 0 var(--s-6);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+
+/* flex-basis 必须是 auto 而不是 0。
+   写 `flex: 1` 等于 `1 1 0%`，收缩量按 basis 加权 → 基数 0 就永远不收缩，
+   空间不够时整个缺口全压到右边那几个按钮上，「段落」两个字被挤到换行。
+   给它真实基数，它才会先省略号让位。 */
+.topbar__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--f-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__counter {
+  flex: none;
+  font-family: var(--f-num);
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* 单字形按钮（← ＋ ⋯）。带文字的按钮用 .topbar__toggle，别塞进这个 32px 里。 */
+.topbar__icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font-size: 16px;
+  transition:
+    background var(--d-fast) var(--e-out),
+    color var(--d-fast) var(--e-out);
+}
+
+.topbar__icon:hover {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+}
+
+/* 本期不渲染任何元素，只占位 —— 以后加用户系统时顶栏不必重排 */
+.topbar__avatar-slot {
+  flex: 0 0 var(--w-avatar-slot);
+}
+
+/* 带文字标签的顶栏按钮：宽度随内容，且永不换行 */
+.topbar__toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-md);
+  color: var(--text-2);
+  font: var(--t-meta);
+  white-space: nowrap;
+  transition:
+    background var(--d-fast) var(--e-out),
+    color var(--d-fast) var(--e-out);
+}
+
+.topbar__toggle:hover,
+.topbar__toggle[aria-pressed='true'] {
+  background: var(--acc-soft);
+  color: var(--acc-text);
+}
