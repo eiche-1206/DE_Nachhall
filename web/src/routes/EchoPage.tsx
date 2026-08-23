@@ -36,6 +36,14 @@ import { useSettings } from '../settings/SettingsProvider';
 import { parseChunkIndex, parseMediaId } from './params';
 import './EchoPage.css';
 
+/**
+ * 进入 ⑤ 回放后自动播放前的停顿。
+ *
+ * 不设成 0：刚说完话立刻听到自己会像被打断。留一拍，让人从「说」
+ * 切换到「听」。也不设更长 —— 超过两三秒就开始像是卡住了。
+ */
+const AUTO_PLAYBACK_DELAY_MS = 2000;
+
 export function EchoPage() {
   const nav = useNavigate();
   const { id } = useParams();
@@ -62,6 +70,7 @@ export function EchoPage() {
 
   const recorder = useRecorder();
   const playbackRef = useRef<HTMLAudioElement>(null);
+  const autoPlayTimer = useRef<number | null>(null);
 
   const chunk: ChunkOut | undefined = chunks[state.chunkIdx];
   const chapters: ChapterOut[] = media?.chapters ?? [];
@@ -155,11 +164,39 @@ export function EchoPage() {
   };
 
   const playRecording = useCallback(() => {
+    // 手动播了就把待触发的自动回放取消掉，否则两秒后会再响一遍
+    if (autoPlayTimer.current !== null) {
+      window.clearTimeout(autoPlayTimer.current);
+      autoPlayTimer.current = null;
+    }
     const el = playbackRef.current;
     if (!el || !recorder.url) return;
     el.currentTime = 0;
-    void el.play();
-  }, [recorder.url]);
+    // 自动回放不是用户手势触发的，浏览器的自动播放策略可能拦下来。
+    // 拦了就说一声 —— 干等两秒没声音又不知道为什么，比没有自动回放更糟。
+    void el.play().catch(() => toast('浏览器拦下了自动播放，按 Space 手动回放。', 'err'));
+  }, [recorder.url, toast]);
+
+  /* 进 ⑤ 自动回放，不用再手动点一次。
+   *
+   * 依赖里带 recorder.url 是必须的：录音 blob 是 MediaRecorder 的 onstop
+   * 之后才生成的，进这一步的瞬间 url 往往还是 null。等它就绪再起表。
+   *
+   * 清理函数同样必须：切段、跳步骤、离开页面时若不取消，声音会在人
+   * 已经走开之后突然响起来。 */
+  useEffect(() => {
+    if (step !== 'playback' || !recorder.url) return;
+    autoPlayTimer.current = window.setTimeout(() => {
+      autoPlayTimer.current = null;
+      playRecording();
+    }, AUTO_PLAYBACK_DELAY_MS);
+    return () => {
+      if (autoPlayTimer.current !== null) {
+        window.clearTimeout(autoPlayTimer.current);
+        autoPlayTimer.current = null;
+      }
+    };
+  }, [step, recorder.url, playRecording]);
 
   // ---------- Space / Enter 的语义随步骤走 ----------
 
