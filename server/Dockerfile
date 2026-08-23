@@ -22,6 +22,11 @@ RUN apt-get update -qq \
 WORKDIR /app
 COPY pyproject.toml ./
 COPY src ./src
+# 迁移脚本必须进镜像：初始化走的是 `docker compose run api python -m
+# de_nachhall.initdb`，那条路只挂 src/，不挂整个 server/。漏了它的话
+# 全新 clone 第一步就失败（实测过）。
+COPY alembic.ini ./
+COPY alembic ./alembic
 RUN pip install --no-cache-dir -e .
 
 EXPOSE 8000
@@ -58,6 +63,8 @@ RUN pip install --no-cache-dir --upgrade pip
 WORKDIR /app
 COPY pyproject.toml ./
 COPY src ./src
+COPY alembic.ini ./
+COPY alembic ./alembic
 RUN pip install --no-cache-dir -e ".[asr]"
 
 CMD ["python", "-m", "de_nachhall.worker"]

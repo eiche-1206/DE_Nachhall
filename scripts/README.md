@@ -10,6 +10,7 @@
 | `logs.sh [服务]` | 跟日志。默认跟 `worker` |
 | `import.sh <链接>` | 命令行导入一期素材，等价于界面右上角的 ＋ |
 | `disk.sh` | 看素材占了多少地方，按期列出 |
+| `fix-perms.sh` | 把 `data/` 属主改回当前用户（服务以 root 跑，写出来的文件归 root） |
 | `check.sh` | 全量检查：后端 ruff + mypy + pytest，前端 tsc + eslint |
 | `gen-api-types.sh` | 改了后端接口之后重新生成前端类型 |
 

@@ -59,6 +59,28 @@ $EDITOR .env          # 至少确认 LLM_PROVIDER 与 HOST_PROXY，见下方「�
 
 打开 **http://localhost:8000**。
 
+### 会自动生成什么
+
+仓库里**没有 `data/` 目录**，它和里面的东西都是跑起来之后自己出现的：
+
+| | 谁创建 | 什么时候 |
+|---|---|---|
+| `data/` | Docker（bind mount 自动建目录） | 第一次 `up` 或 `run` |
+| `data/de_nachhall.db` | `init.sh` 里的 alembic | 第 2 步 |
+| `data/de_nachhall.db-wal` `-shm` | SQLite 自己 | **只在运行时存在**，干净关闭会自动收掉 |
+| `data/media/<id>/` | 第一次导入时 | 导第一期素材时 |
+
+所以拿到一份新 clone 之后**什么都不用手动建**，跑完三步就有了。
+
+> **`-wal` 不是临时文件。** WAL 模式下最近提交的事务住在里面，checkpoint
+> 之前还没写回主库。搬库要三个文件一起搬，或者先
+> `sqlite3 data/de_nachhall.db "PRAGMA wal_checkpoint(TRUNCATE);"`。
+> 只拷 `.db` 会丢掉最近的记录——这个坑踩过。
+
+> **这些文件归 root。** compose 里的服务以 root 跑，所以它们写出来的东西
+> 本机 `rm` 不掉。日常没影响（读取、备份、界面删除都正常），
+> 需要时 `./scripts/fix-perms.sh` 改回你自己。
+
 > **第 2 步不能省。** `docker compose up` 不会自己建表——迁移是有副作用的操作，
 > 让它跟着容器每次重启跑一遍，早晚会在某次意外重启时执行到一半。
 > 这条命令两步都幂等，重复执行安全。
