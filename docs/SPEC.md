@@ -1286,7 +1286,7 @@ WER 偏高几乎全部来自 **128 个插入**，拆开看：
 
 | # | 问题 | 处理 |
 |---|---|---|
-| **B1** | 宿主经 `HTTPS_PROXY=http://127.0.0.1:7897` 上网，**容器内 `127.0.0.1` 是它自己**，抓取全部失败（`Errno 101`） | compose 里 worker 用 `network_mode: host` 并注入代理变量；或 `host.docker.internal` + `extra_hosts` |
+| **B1** | 宿主经 `HTTPS_PROXY=http://127.0.0.1:7897`（当时的端口，现由 `.env` 的 `HOST_PROXY` 配置）上网，**容器内 `127.0.0.1` 是它自己**，抓取全部失败（`Errno 101`） | compose 里 worker 用 `network_mode: host` 并注入代理变量；或 `host.docker.internal` + `extra_hosts` |
 | **B2** | YouTube 对该出口 IP 返回 `Sign in to confirm you're not a bot`，需 `--cookies-from-browser` | **ZDF 无此问题**。素材源改为 ZDF 后 B2 不再阻塞 MVP；保留 `YTDLP_COOKIES_FROM` 环境变量供以后 |
 
 ### 11.4 管线端到端实测（2026-08-23，TASK-017~020 完成后）
@@ -1663,7 +1663,7 @@ sprint_zero_results:
 
 deployment_blockers:
   B1:
-    item: 宿主代理 127.0.0.1:7897 容器内不可达（Errno 101）
+    item: 宿主 loopback 上的代理容器内不可达（Errno 101）
     fix: worker 用 network_mode host 并注入 HTTP_PROXY/HTTPS_PROXY
     status: 必须在 compose 中处理
   B2:

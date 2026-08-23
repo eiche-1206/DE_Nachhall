@@ -42,8 +42,9 @@ LLM_API_KEY=...
 LLM_PROVIDER=null                     # 跳过分章与翻译，跟读照常可用
 ```
 
-`worker` 用 `network_mode: host`：宿主代理监听 `127.0.0.1:7897`，
-容器内的 `127.0.0.1` 是它自己的 loopback，够不着（SPEC §11.3 B1）。
+`api` 与 `worker` 都用 `network_mode: host`：代理这类工具通常只监听宿主的
+`127.0.0.1`，容器内的 `127.0.0.1` 是它自己的 loopback，够不着（SPEC §11.3 B1）。
+端口填在 `.env` 的 `HOST_PROXY`，仓库里没有写死的值。
 
 媒体文件统一在 `./data/media`。**不要再给 `/data/media` 加第二个挂载** ——
 `./data:/data` 与 `./media:/data/media` 同时存在时后者会把前者盖住。
@@ -92,7 +93,7 @@ worker 没起时也能单独跑一遍管线：
 docker run --rm --network host --user $(id -u):$(id -g) \
   --env-file .env -e LLM_PROVIDER=null -e HOME=/tmp \
   -e DATABASE_URL=sqlite+pysqlite:////data/de_nachhall.db -e MEDIA_ROOT=/data/media \
-  -e HTTPS_PROXY=http://127.0.0.1:7897 \
+  -e HTTPS_PROXY="$HOST_PROXY" \   # 从 .env 里取，别写死
   -v "$PWD/server/src:/app/src" -v "$PWD/data:/data" de_nachhall-worker \
   python -m de_nachhall.worker
 ```

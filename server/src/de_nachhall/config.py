@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 
     # ---- 网络 ----
     # 变量名与 HTTPS_PROXY 环境变量同名，宿主已导出的代理直接生效，不用另配一份。
-    # worker 容器用 network_mode: host 才够得着宿主的 127.0.0.1:7897（SPEC §11.3 B1）。
+    # 容器用 network_mode: host 才够得着宿主 loopback 上的代理（SPEC §11.3 B1）。
     https_proxy: str | None = None
 
     # ---- 转写 ----

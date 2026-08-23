@@ -205,14 +205,29 @@ LLM_PROVIDER=null
 > 这是有意的——把错误推迟到三分钟后炸在处理管线里更难查。
 > **api 不受影响**：它从头到尾不碰 LLM，没有 key 照样能播、能跟读。
 
-### 代理——决定抓不抓得到素材
+### 代理——只在直连出不去时才需要
+
+**能直接上网就留空**，`HOST_PROXY=` 空值代表不走代理。
+
+需要的话，值取决于你机器上跑的是什么、监听哪个端口。查自己的：
 
 ```bash
-HOST_PROXY=http://127.0.0.1:7897     # 宿主上 `env | grep -i proxy` 确认端口
+env | grep -i proxy
+ss -ltnp | grep -iE "clash|mihomo|v2ray|sing-box"
 ```
 
-`worker` 用 `network_mode: host` 就是为了够得着宿主的 `127.0.0.1`——
-容器内的 `127.0.0.1` 是它自己的 loopback。不需要代理的话留空即可。
+然后填进 `.env`：
+
+```bash
+HOST_PROXY=http://127.0.0.1:<你的端口>
+```
+
+`api` 与 `worker` 都用 `network_mode: host`，所以这里的 `127.0.0.1`
+指的就是**宿主的** loopback——这正是要它们用 host 网络的原因：
+代理这类工具通常只监听宿主 `127.0.0.1`，bridge 网络的容器够不着。
+
+> **换了代理端口只要改这一行**，然后 `./scripts/up.sh`。
+> 别处没有写死的值——compose 里的兜底是空，不是某个端口。
 
 其余项（Whisper 模型、切分目标词数、录音超时）都有可用默认值，
 说明写在 `.env.example` 里。

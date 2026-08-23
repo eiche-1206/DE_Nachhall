@@ -111,9 +111,9 @@ def test_proxy_is_passed_through(monkeypatch: pytest.MonkeyPatch) -> None:
         return subprocess.CompletedProcess(cmd, 0, json.dumps(INFO), "")
 
     monkeypatch.setattr(subprocess, "run", run)
-    Ytdlp(proxy="http://127.0.0.1:7897").probe("https://x.invalid/a")
+    Ytdlp(proxy="http://proxy.invalid:1080").probe("https://x.invalid/a")
     assert "--proxy" in seen[0]
-    assert "http://127.0.0.1:7897" in seen[0]
+    assert "http://proxy.invalid:1080" in seen[0]
 
 
 def test_download_finds_output(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:  # type: ignore[no-untyped-def]

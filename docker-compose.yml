@@ -2,9 +2,9 @@
 #
 # 三条与常规不同的地方，都有硬理由：
 #   1. 无 db 服务 —— MVP 用 SQLite（文件），见 docs/SPEC.md §1.1
-#   2. api 与 worker 都用 network_mode: host —— 宿主代理只监听
-#      127.0.0.1:7897，容器内的 127.0.0.1 是它自己的 loopback，够不着，
-#      而代理没开放到 0.0.0.0，host-gateway 那条路也走不通（SPEC §11.3 B1）。
+#   2. api 与 worker 都用 network_mode: host —— 代理这类工具通常只监听宿主的
+#      127.0.0.1，容器内的 127.0.0.1 是它自己的 loopback，够不着；
+#      而它没开放到 0.0.0.0 的话 host-gateway 那条路也走不通（SPEC §11.3 B1）。
 #      api 也需要出网：提交素材时它同步 probe。host 模式下 ports: 不生效，
 #      所以 uvicorn 直接听 8001，8000 留给 web
 #   3. 媒体文件挂在 ./data/media，不额外挂 ./media —— 两者都映射到
@@ -53,9 +53,11 @@ services:
     environment:
       DATABASE_URL: sqlite+pysqlite:////data/de_nachhall.db
       MEDIA_ROOT: /data/media
-      # 宿主代理：worker 要抓 YouTube/ZDF，必须走它
-      HTTP_PROXY: ${HOST_PROXY:-http://127.0.0.1:7897}
-      HTTPS_PROXY: ${HOST_PROXY:-http://127.0.0.1:7897}
+      # 宿主代理：worker 要抓素材，网络受限时必须走它。
+      # 兜底是**空**而不是某个端口 —— 写死一个端口的话，
+      # HOST_PROXY 没设时会去连一个不存在的代理，报错指向完全错的方向。
+      HTTP_PROXY: ${HOST_PROXY:-}
+      HTTPS_PROXY: ${HOST_PROXY:-}
       NO_PROXY: localhost,127.0.0.1
     network_mode: host               # 见文件头注释
     volumes:
