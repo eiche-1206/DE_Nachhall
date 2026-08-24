@@ -155,6 +155,7 @@ graph TD
 - TASK-043: 无依赖
 - TASK-044: [TASK-041, TASK-034]
 - TASK-045: [TASK-024]
+- TASK-046: [TASK-019]
 
 ## 任务列表
 
@@ -655,3 +656,26 @@ graph TD
 - **验收标准**: 回收后 `media` 行的 `video_path` / `thumb_path` 与磁盘一致，不出现坏记录；订阅源素材与自导入素材的回收策略可分别配置；清理前给出将释放多少空间；`scripts/disk.sh` 的输出能验证结果
 - **相关文件**: server/src/de_nachhall/services/cleanup_service.py, server/src/de_nachhall/routers/media.py, scripts/disk.sh
 - **备注**: 用户 2026-08-23 提出，明确说本期不实现。原话：「我们后面要加数据库清理功能，以免导入文件占用太多空间，这个本期不实现」
+
+### TASK-046: 平台字幕的时间戳对齐
+- **状态**: pending
+- **执行者**: -
+- **认领时间**: -
+- **优先级**: P1
+- **依赖**: [TASK-019]
+- **模块**: M5 转写
+- **描述**: 平台字幕（ZDF 官方 VTT）的 cue 时间是按**阅读节奏**排的，不是按语音起止排的 —— 通常提前于说话开始、延后于说话结束，段与段之间还留着空。实测四期素材的段间空隙：
+
+  | 素材 | 来源 | 段数 | 空隙合计 | 最大 |
+  |---|---|---|---|---|
+  | media 1 | VTT | 53 | **14.6 s** | 3.5 s |
+  | media 2 | Whisper | 10 | 0 s | — |
+  | media 3 | Whisper | 10 | 7.1 s | 1.3 s |
+  | media 4 | VTT | 72 | **12.4 s** | 1.7 s |
+
+  Whisper 那条路已经在 2026-08-24 用词级时间戳收紧了（`word_timestamps=True` + `_speech_span()`）；**VTT 这条路还没有对应手段**。可选做法：用 wav 跑一次 VAD 或强制对齐，把 cue 边界吸附到最近的语音起止；或对同一段音频跑一次 Whisper 只取时间戳、文本仍用官方字幕（拼写正确 + 时间准确，两边的长处都要）。
+
+  另有一处：`merge_fragments_to_sentences` 在句号出现在 cue **中间**时，仍然取整个 cue 的 end，句子边界因此偏晚。有了词级时间戳就能切在词上。
+- **验收标准**: VTT 素材的段间空隙合计降到当前的 1/3 以内；段首不含超过 200 ms 的前置静音（抽样测量，与 Sprint 0 的 V2b 同样方式）；官方字幕的**文本一字不改** —— 拼写正确是选它而不选 Whisper 的全部理由
+- **相关文件**: server/src/de_nachhall/providers/transcript/vtt.py, server/src/de_nachhall/chunking/sentences.py
+- **备注**: 用户 2026-08-24 提出「时间戳尽量精准、全文播放连贯、段落分得准确」。三件事里前端的「连贯」与 Whisper 的精度当天已做，这一条是剩下的。

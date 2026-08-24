@@ -319,3 +319,53 @@ def test_factory_routes_by_provider() -> None:
     assert build_enricher(
         Settings(llm_provider="openai_compat", llm_api_key="k", llm_base_url="b")
     ).name == "openai_compat"
+
+
+# ==================== 词级时间戳 ====================
+#
+# segment 级的 start/end 带着 VAD 的静音余量。跟读时每段前后各多出几百
+# 毫秒空白，一段一段累积起来很难受，所以边界要贴到真正的语音上。
+
+from de_nachhall.providers.transcript.faster_whisper import _speech_span  # noqa: E402
+
+
+class _Word:
+    def __init__(self, word: str, start: float, end: float) -> None:
+        self.word, self.start, self.end = word, start, end
+
+
+class _Seg:
+    def __init__(self, start: float, end: float, words=None) -> None:  # type: ignore[no-untyped-def]
+        self.start, self.end, self.words = start, end, words
+
+
+def test_speech_span_trims_leading_silence() -> None:
+    seg = _Seg(10.0, 15.0, [_Word(" Hallo", 10.8, 11.2), _Word(" Welt", 11.3, 11.9)])
+    start, end = _speech_span(seg)
+    assert start == 10.8  # 不是 10.0
+    assert 11.9 < end <= 15.0  # 加了尾部余量，但不越过 segment 末尾
+
+
+def test_speech_span_pad_never_exceeds_segment_end() -> None:
+    """尾部余量必须钳住，否则会侵入下一段。"""
+    seg = _Seg(10.0, 11.9, [_Word(" Hallo", 10.8, 11.2), _Word(" Welt", 11.3, 11.9)])
+    _, end = _speech_span(seg)
+    assert end == 11.9
+
+
+def test_speech_span_falls_back_without_words() -> None:
+    """整段没有词（拟声、纯标点）时退回 segment 边界，不能返回空区间。"""
+    assert _speech_span(_Seg(3.0, 4.5, [])) == (3.0, 4.5)
+    assert _speech_span(_Seg(3.0, 4.5, None)) == (3.0, 4.5)
+
+
+def test_speech_span_survives_bogus_word_times() -> None:
+    """词级时间戳偶尔会给出倒序或零长区间。"""
+    seg = _Seg(3.0, 4.5, [_Word(" x", 4.4, 4.0)])
+    assert _speech_span(seg) == (3.0, 4.5)
+
+
+def test_speech_span_ignores_blank_words() -> None:
+    seg = _Seg(10.0, 15.0, [_Word("  ", 10.0, 10.1), _Word(" Hallo", 10.8, 11.2)])
+    start, _ = _speech_span(seg)
+    assert start == 10.8

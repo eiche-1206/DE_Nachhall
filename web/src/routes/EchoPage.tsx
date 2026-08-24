@@ -109,8 +109,34 @@ export function EchoPage() {
     video.play({ startMs: chunk.start_ms, endMs: chunk.end_ms });
   }, [chunk, video]);
 
-  // 进入播放类步骤就自动开始 —— 每一步都要手动点一次会毁掉节奏
+  // 整期的终点。连播一次播到这儿，中途不打断。
+  const lastEndMs = chunks.length ? chunks[chunks.length - 1]!.end_ms : 0;
+
+  /* 连播：**一次播到底**，段与段之间不 seek。
+   *
+   * 之前是「一段播完 seek 到下一段开头」，那会跳过段间空隙 —— 实测
+   * media 1 有 14.6 秒被跳掉、52 次 seek。字幕的时间戳本来就不严丝合缝，
+   * 拿它当剪辑点，连播就变成了一串顿挫。
+   *
+   * 依赖里是 state.seq 而不是 state.chunkIdx：连播时指针会被播放位置
+   * 一路推着走（syncChunk），那不该重新起播；只有用户显式跳转才该。 */
   useEffect(() => {
+    if (!continuous || step !== 'play1' || !chunk) return;
+    video.play({ startMs: chunk.start_ms, endMs: lastEndMs });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [continuous, step, state.seq, lastEndMs]);
+
+  /* 连播时让当前段跟着播放位置走。只移指针，不碰播放。 */
+  useEffect(() => {
+    if (!continuous || step !== 'play1' || !video.playing) return;
+    const pos = video.positionMs;
+    const idx = chunks.findIndex((c) => pos >= c.start_ms && pos < c.end_ms);
+    if (idx >= 0 && idx !== state.chunkIdx) machine.syncChunk(idx);
+  }, [continuous, step, video.playing, video.positionMs, chunks, state.chunkIdx, machine]);
+
+  // 逐段模式：进入播放类步骤就自动开始 —— 每一步都要手动点一次会毁掉节奏
+  useEffect(() => {
+    if (continuous) return;
     if (!chunk) return;
     if (step === 'play1' || step === 'replay2') {
       playChunk();
@@ -118,7 +144,7 @@ export function EchoPage() {
       video.stop();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, state.chunkIdx, chunk?.idx]);
+  }, [continuous, step, state.chunkIdx, chunk?.idx]);
 
   // 录音步骤：进来就开录，离开就停
   useEffect(() => {
@@ -153,13 +179,9 @@ export function EchoPage() {
   //   连播模式  —— ① 播完进**下一段**，继续播 ①，一路到底
   //   其余情况  —— 由步骤自己说了算（STEP_META.advanceOnSpanEnd）
   spanEndRef.current = () => {
-    if (continuous && step === 'play1') {
-      if (state.chunkIdx < chunks.length - 1) {
-        gotoChunk(state.chunkIdx + 1);
-      }
-      // 最后一段播完就停在这儿，不自动跳去等待确认 —— 连播的终点是「放完了」
-      return;
-    }
+    // 连播只有一个 span（当前段开头 → 整期末尾），走到这儿就是放完了。
+    // 不推进步骤 —— 连播的终点是「放完了」，不是「该录音了」。
+    if (continuous && step === 'play1') return;
     if (STEP_META[step].advanceOnSpanEnd) machine.next();
   };
 

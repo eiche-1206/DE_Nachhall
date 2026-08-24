@@ -47,6 +47,7 @@ type Action =
   | { type: 'restart' }
   | { type: 'gotoStep'; pos: number }
   | { type: 'gotoChunk'; idx: number }
+  | { type: 'syncChunk'; idx: number }
   | { type: 'setSteps'; steps: StepId[] }
   | { type: 'setDraft'; text: string }
   | { type: 'setDictation'; phase: DictationPhase }
@@ -58,6 +59,7 @@ type Action =
 function moveTo(state: EchoState, pos: number): EchoState {
   return {
     ...state,
+    seq: state.seq + 1,
     stepPos: pos,
     dictation: 'writing',
     subtitles: defaultSubs(state.steps[pos], state.prefSubtitles),
@@ -68,6 +70,7 @@ function moveTo(state: EchoState, pos: number): EchoState {
 function freshForChunk(state: EchoState, chunkIdx: number): EchoState {
   return {
     ...state,
+    seq: state.seq + 1,
     chunkIdx,
     stepPos: 0,
     dictation: 'writing',
@@ -99,6 +102,11 @@ function reducer(state: EchoState, action: Action): EchoState {
     }
     case 'gotoChunk':
       return freshForChunk(state, action.idx);
+    case 'syncChunk':
+      // 连播时播放位置推着走：**只移指针**，不动步骤、不动 seq，
+      // 所以不会触发重新起播 —— 那正是「连贯」的全部含义。
+      if (action.idx === state.chunkIdx) return state;
+      return { ...state, chunkIdx: action.idx };
     case 'setSteps': {
       // settings 中途改了：序列重算，位置钳到新序列范围内
       const stepPos = Math.min(state.stepPos, action.steps.length - 1);
@@ -129,6 +137,8 @@ export interface EchoMachine {
   restart: () => void;
   gotoStep: (pos: number) => void;
   gotoChunk: (idx: number) => void;
+  /** 只移动当前段指针，不打断播放。连播专用。 */
+  syncChunk: (idx: number) => void;
   setDraft: (text: string) => void;
   submitDictation: () => void;
   rewrite: () => void;
@@ -148,6 +158,7 @@ export function useEchoMachine(settings: Settings, initialChunk: number): EchoMa
     subtitles: defaultSubs(steps[0], settings.subtitles),
     prefSubtitles: settings.subtitles,
     translationOpen: false,
+    seq: 0,
   }));
 
   // settings 在浮层里改了：序列立刻跟着变，不等下一段
@@ -166,6 +177,7 @@ export function useEchoMachine(settings: Settings, initialChunk: number): EchoMa
     restart: useCallback(() => dispatch({ type: 'restart' }), []),
     gotoStep: useCallback((pos: number) => dispatch({ type: 'gotoStep', pos }), []),
     gotoChunk: useCallback((idx: number) => dispatch({ type: 'gotoChunk', idx }), []),
+    syncChunk: useCallback((idx: number) => dispatch({ type: 'syncChunk', idx }), []),
     setDraft: useCallback((text: string) => dispatch({ type: 'setDraft', text }), []),
     // 提交即自动展示对照，不需要再点一次
     submitDictation: useCallback(() => dispatch({ type: 'setDictation', phase: 'comparing' }), []),
