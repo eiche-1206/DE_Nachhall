@@ -39,10 +39,10 @@ import './EchoPage.css';
 /**
  * 进入 ⑤ 回放后自动播放前的停顿。
  *
- * 不设成 0：刚说完话立刻听到自己会像被打断。留一拍，让人从「说」
- * 切换到「听」。也不设更长 —— 超过两三秒就开始像是卡住了。
+ * 不设成 0：刚说完话立刻听到自己会像被打断，留一拍让人从「说」切到「听」。
+ * 也不设更长 —— 等待本身不产生价值，超过一两秒就开始像是卡住了。
  */
-const AUTO_PLAYBACK_DELAY_MS = 2000;
+const AUTO_PLAYBACK_DELAY_MS = 1000;
 
 export function EchoPage() {
   const nav = useNavigate();
@@ -164,7 +164,7 @@ export function EchoPage() {
   };
 
   const playRecording = useCallback(() => {
-    // 手动播了就把待触发的自动回放取消掉，否则两秒后会再响一遍
+    // 手动播了就把待触发的自动回放取消掉，否则一秒后会再响一遍
     if (autoPlayTimer.current !== null) {
       window.clearTimeout(autoPlayTimer.current);
       autoPlayTimer.current = null;
@@ -173,7 +173,7 @@ export function EchoPage() {
     if (!el || !recorder.url) return;
     el.currentTime = 0;
     // 自动回放不是用户手势触发的，浏览器的自动播放策略可能拦下来。
-    // 拦了就说一声 —— 干等两秒没声音又不知道为什么，比没有自动回放更糟。
+    // 拦了就说一声 —— 干等一秒没声音又不知道为什么，比没有自动回放更糟。
     void el.play().catch(() => toast('浏览器拦下了自动播放，按 Space 手动回放。', 'err'));
   }, [recorder.url, toast]);
 

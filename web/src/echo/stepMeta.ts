@@ -59,7 +59,7 @@ export const STEP_META: Record<StepId, StepMeta> = {
   },
   playback: {
     label: '回放',
-    note: '两秒后自动回放 · 原声、我的 可反复切换',
+    note: '一秒后自动回放 · 原声、我的 可反复切换',
     textVisible: true,
     allowSubtitleToggle: true,
     advanceOnSpanEnd: false, // 「▶ 原声」是拿来对比的，不是要往下走
