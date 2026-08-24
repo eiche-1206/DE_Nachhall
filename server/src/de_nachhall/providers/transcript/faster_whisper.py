@@ -33,6 +33,25 @@ _OOM_HINT = (
 )
 
 
+# 末尾留一点余量：正好切在最后一个词的词尾会把爆破音的收尾剪掉，
+# 听起来像被掐断。钳在 Whisper 自己给的 segment 末尾之内，不会越界到下一段。
+_TAIL_PAD_S = 0.08
+
+
+def _speech_span(seg: Any) -> tuple[float, float]:
+    """从词级时间戳取真正的语音区间。
+
+    没有词（极少数情况，比如整段是拟声或标点）时退回 segment 边界。
+    """
+    words = [w for w in (getattr(seg, "words", None) or []) if str(w.word).strip()]
+    if not words:
+        return float(seg.start), float(seg.end)
+    start = float(words[0].start)
+    end = min(float(words[-1].end) + _TAIL_PAD_S, float(seg.end))
+    # 词级时间戳偶尔会给出倒序或零长区间，兜一下
+    return (start, end) if end > start else (float(seg.start), float(seg.end))
+
+
 class FasterWhisperProvider:
     name = "faster_whisper"
 
@@ -76,8 +95,10 @@ class FasterWhisperProvider:
                 str(media.wav_path),
                 language=lang,
                 vad_filter=True,
-                # 词级时间戳留给 v2 的 WhisperX，chunk 只需要句级边界
-                word_timestamps=False,
+                # 开着它，边界才贴到真正的语音上。
+                # segment 级的 start/end 带着 VAD 的静音余量 —— 跟读时
+                # 每段前后各多出几百毫秒的空白，一段一段累积起来很难受。
+                word_timestamps=True,
                 beam_size=self.beam_size,
             )
             out: list[FragmentOut] = []
@@ -85,11 +106,12 @@ class FasterWhisperProvider:
                 text = seg.text.strip()
                 if not text:
                     continue
+                start_s, end_s = _speech_span(seg)
                 out.append(
                     FragmentOut(
                         idx=len(out),
-                        start_ms=int(seg.start * 1000),
-                        end_ms=int(seg.end * 1000),
+                        start_ms=int(start_s * 1000),
+                        end_ms=int(end_s * 1000),
                         text=text,
                     )
                 )

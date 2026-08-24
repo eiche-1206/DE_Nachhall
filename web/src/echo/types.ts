@@ -35,4 +35,10 @@ export interface EchoState {
   /** 用户在设置里的字幕偏好。只作为「这一步默认不展示原文」时的兜底默认值。 */
   prefSubtitles: boolean;
   translationOpen: boolean;
+  /**
+   * 显式跳转的次数。连播时播放位置会不断把 chunkIdx 往前推（syncChunk），
+   * 那不该重新起播；只有用户自己跳段 / 跳步骤 / 重来才该。用一个计数
+   * 把这两类变化区分开 —— 光看 chunkIdx 分不出是谁改的。
+   */
+  seq: number;
 }
